@@ -1,0 +1,82 @@
+# docker-compose.yml
+# NOTA: Use 2 espaços para cada nível de indentação. Não use TABS.
+
+services:
+  # 1. Backend API (Node.js) - Simula o Cloud Run
+  projeto-cortex-api:
+    build:
+      context: ./projeto-cortex-api
+      dockerfile: Dockerfile
+    container_name: projeto-cortex-api
+    hostname: projeto-cortex-api
+    labels:
+      - ru.grachevko.dhu=projeto-cortex-api
+    ports:
+      - "5000:5000" # Expõe a API na porta 5000
+    volumes:
+      - ./projeto-cortex-api/src:/app/src # Monta o 'src' para hot-reload
+    env_file:
+      - ./projeto-cortex-api/.env # Carrega segredos locais
+    # Garante que o DB inicie antes da API
+    depends_on:
+      mongo-db:
+        condition: service_healthy
+    networks:
+      - projeto-cortex-net
+
+  # 2. Frontend (React) - Simula o Cloud Storage Hosting
+  projeto-cortex-web:
+    build:
+      context: ./projeto-cortex-web
+      dockerfile: Dockerfile
+    container_name: projeto-cortex-web
+    hostname: projeto-cortex-web
+    labels:
+      - ru.grachevko.dhu=projeto-cortex-web
+    ports:
+      - "3000:3000" # Expõe o React App na porta 3000
+    volumes:
+      - ./projeto-cortex-web/src:/app/src # Monta o 'src' para hot-reload
+    environment:
+      # Garante que o React (dentro do container) se conecte à API (também no container)
+      - REACT_APP_API_URL=http://projeto-cortex-web:5000
+    networks:
+      - projeto-cortex-net
+    depends_on:
+      - projeto-cortex-api
+
+  # 3. Banco de Dados (MongoDB) - Simula o MongoDB Atlas
+  mongo-db:
+    image: mongo:latest # Usamos uma imagem oficial do MongoDB
+    container_name: projeto-cortex-mongodb
+    hostname: projeto-cortex-mongodb
+    labels:
+      - ru.grachevko.dhu=projeto-cortex-mongodb
+    ports:
+      - "27017:27017" # Permite conexão via Compass/Shell do host
+    volumes:
+      - mongo-data:/data/db # Persiste os dados localmente
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - projeto-cortex-net
+  hosts-updater:
+    image: grachev/docker-hosts-updater
+    container_name: projeto-cortex-hosts-updater
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/hosts:/opt/hosts
+    networks:
+      - projeto-cortex-net
+
+volumes:
+  mongo-data: # Volume nomeado para persistir dados do MongoDB
+
+networks:
+  projeto-cortex-net:
+    driver: bridge

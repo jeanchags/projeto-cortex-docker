@@ -1,0 +1,28 @@
+#Dependências
+/node_modules
+
+#Arquivos de build
+/dist
+
+#Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+#Arquivos de ambiente
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+#Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+#Diretórios
+projeto-cortex-api/
+projeto-cortex-web/
+
+#IDE
+.idea
