@@ -39,7 +39,7 @@ services:
       - ./projeto-cortex-web/src:/app/src # Monta o 'src' para hot-reload
     environment:
       # Garante que o React (dentro do container) se conecte à API (também no container)
-      - REACT_APP_API_URL=http://projeto-cortex-web:5000
+      - REACT_APP_API_URL=http://projeto-cortex-api:5000
     networks:
       - projeto-cortex-net
     depends_on:
@@ -58,7 +58,7 @@ services:
       - mongo-data:/data/db # Persiste os dados localmente
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
+      interval: 120s
       timeout: 5s
       retries: 5
       start_period: 10s
